@@ -1,0 +1,29 @@
+previews:
+  generation: automatic
+
+services:
+  - type: web
+    name: parental-control-backend
+    runtime: docker
+    rootDir: parental-control-system/backend
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  - type: web
+    name: parental-control-frontend
+    runtime: static
+    rootDir: parental-control-system/frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        value: https://parental-control-backend.onrender.com/api/v1
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

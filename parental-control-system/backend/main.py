@@ -3,7 +3,9 @@ from flask_cors import CORS
 import datetime
 import json
 import os
+import fcntl
 from typing import Any, Dict, List
+from contextlib import contextmanager
 
 app = Flask(__name__)
 CORS(app)
@@ -38,6 +40,17 @@ def write_items(path: str, items: List[Dict[str, Any]]) -> None:
     with open(path, "w", encoding="utf-8") as file:
         json.dump(items, file, indent=2, ensure_ascii=False)
 
+@contextmanager
+def with_file_lock(path: str):
+    lock_path = f"{path}.lock"
+    lock_file = open(lock_path, "w", encoding="utf-8")
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        lock_file.close()
+
 
 def validate_payload(category: str, payload: Dict[str, Any]) -> str | None:
     required = {
@@ -54,16 +67,19 @@ def validate_payload(category: str, payload: Dict[str, Any]) -> str | None:
 
 def save_data(category: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     path = FILES[category]
-    current = read_items(path)
 
     record = dict(payload)
     record["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    current.append(record)
 
-    if len(current) > MAX_ITEMS_PER_CATEGORY:
-        current = current[-MAX_ITEMS_PER_CATEGORY:]
+    with with_file_lock(path):
+        current = read_items(path)
+        current.append(record)
 
-    write_items(path, current)
+        if len(current) > MAX_ITEMS_PER_CATEGORY:
+            current = current[-MAX_ITEMS_PER_CATEGORY:]
+
+        write_items(path, current)
+
     return record
 
 

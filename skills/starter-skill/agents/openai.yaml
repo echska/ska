@@ -1,0 +1,4 @@
+interface:
+  display_name: "Starter Skill"
+  short_description: "Template skill for repeatable project workflows."
+  default_prompt: "Use this skill to execute the documented workflow and bundled scripts for consistent results."

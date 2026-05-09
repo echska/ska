@@ -1,5 +1,5 @@
 previews:
-  generation: automatic
+  generation: off
 
 services:
   - type: web
@@ -8,7 +8,7 @@ services:
     repo: https://github.com/echska/ska
     branch: main
     rootDir: parental-control-system/backend
-    plan: starter
+    plan: free
     autoDeployTrigger: commit
     healthCheckPath: /health
     envVars:
@@ -23,7 +23,7 @@ services:
     rootDir: parental-control-system/frontend
     buildCommand: npm install && npm run build
     staticPublishPath: parental-control-system/frontend/build
-    pullRequestPreviewsEnabled: true
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
         value: "18.20.4"

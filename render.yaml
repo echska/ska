@@ -5,9 +5,11 @@ services:
   - type: web
     name: parental-control-backend
     runtime: docker
+    repo: https://github.com/echska/ska
+    branch: main
     rootDir: parental-control-system/backend
     plan: starter
-    autoDeploy: true
+    autoDeployTrigger: commit
     healthCheckPath: /health
     envVars:
       - key: PYTHONUNBUFFERED
@@ -16,11 +18,17 @@ services:
   - type: web
     name: parental-control-frontend
     runtime: static
+    repo: https://github.com/echska/ska
+    branch: main
     rootDir: parental-control-system/frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
     pullRequestPreviewsEnabled: true
     envVars:
+      - key: NODE_VERSION
+        value: "18.20.4"
+      - key: CI
+        value: "false"
       - key: REACT_APP_API_BASE_URL
         value: https://parental-control-backend.onrender.com/api/v1
     routes:

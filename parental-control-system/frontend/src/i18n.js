@@ -1,0 +1,123 @@
+export const LANGUAGES = {
+  ar: {
+    code: "ar",
+    dir: "rtl",
+    switchLabel: "English",
+    loginEyebrow: "لوحة خاصة",
+    loginTitle: "لوحة التحكم الأبوية الموحدة",
+    tokenLabel: "رمز الدخول",
+    tokenPlaceholder: "أدخل رمز لوحة التحكم",
+    signIn: "تسجيل الدخول",
+    dashboardEyebrow: "وحدة مراقبة خاصة",
+    dashboardTitle: "لوحة التحكم الأبوية الموحدة",
+    signOut: "تسجيل الخروج",
+    sectionsLabel: "أقسام لوحة التحكم",
+    statuses: {
+      loading: "جاري تحميل بيانات اللوحة...",
+      ready: "بيانات اللوحة محدثة.",
+      partial: "تعذر تحميل بعض بيانات اللوحة.",
+      missingToken: "رمز الخادم غير مضبوط بعد.",
+    },
+    tabs: {
+      alerts: "التنبيهات",
+      router: "الراوتر",
+      calls: "المكالمات",
+      messages: "الرسائل",
+      locations: "المواقع",
+      whatsapp: "واتساب",
+      instagram: "إنستغرام",
+    },
+    panels: {
+      alerts: "التنبيهات",
+      alertFallback: "تنبيه",
+      noDetails: "لا توجد تفاصيل",
+      calls: "المكالمات",
+      messages: "الرسائل",
+      routeTimeline: "مسار الجهاز",
+      locationTimeline: "سجل المواقع",
+      routerPlaceholder: "سيظهر محتوى مراقبة الراوتر هنا.",
+      whatsappPlaceholder: "سيظهر محتوى واتساب هنا.",
+      instagramPlaceholder: "سيظهر محتوى إنستغرام هنا.",
+      latestLocation: "آخر موقع",
+      unknown: "غير معروف",
+    },
+    columns: {
+      device: "الجهاز",
+      number: "الرقم",
+      duration: "المدة",
+      type: "النوع",
+      timestamp: "الوقت",
+      from: "من",
+      to: "إلى",
+      content: "المحتوى",
+      latitude: "خط العرض",
+      longitude: "خط الطول",
+    },
+  },
+  en: {
+    code: "en",
+    dir: "ltr",
+    switchLabel: "العربية",
+    loginEyebrow: "Private dashboard",
+    loginTitle: "Unified Parental Control Dashboard",
+    tokenLabel: "Access token",
+    tokenPlaceholder: "Enter dashboard token",
+    signIn: "Sign in",
+    dashboardEyebrow: "Private monitoring console",
+    dashboardTitle: "Unified Parental Control Dashboard",
+    signOut: "Sign out",
+    sectionsLabel: "Dashboard sections",
+    statuses: {
+      loading: "Loading dashboard data...",
+      ready: "Dashboard data is up to date.",
+      partial: "Some dashboard data could not be loaded.",
+      missingToken: "The backend token is not configured yet.",
+    },
+    tabs: {
+      alerts: "Alerts",
+      router: "Router",
+      calls: "Calls",
+      messages: "Messages",
+      locations: "Locations",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram",
+    },
+    panels: {
+      alerts: "Notifications",
+      alertFallback: "Alert",
+      noDetails: "No details",
+      calls: "Calls",
+      messages: "Messages",
+      routeTimeline: "Device Route Timeline",
+      locationTimeline: "Location Timeline",
+      routerPlaceholder: "Router monitor content will appear here.",
+      whatsappPlaceholder: "WhatsApp content will appear here.",
+      instagramPlaceholder: "Instagram content will appear here.",
+      latestLocation: "Latest location",
+      unknown: "Unknown",
+    },
+    columns: {
+      device: "Device",
+      number: "Number",
+      duration: "Duration",
+      type: "Type",
+      timestamp: "Timestamp",
+      from: "From",
+      to: "To",
+      content: "Content",
+      latitude: "Latitude",
+      longitude: "Longitude",
+    },
+  },
+};
+
+const LANGUAGE_KEY = "dashboardLanguage";
+
+export function getSavedLanguage() {
+  const savedLanguage = window.localStorage.getItem(LANGUAGE_KEY);
+  return savedLanguage === "en" || savedLanguage === "ar" ? savedLanguage : "ar";
+}
+
+export function saveLanguage(language) {
+  window.localStorage.setItem(LANGUAGE_KEY, language);
+}

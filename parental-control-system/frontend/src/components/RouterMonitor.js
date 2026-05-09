@@ -1,5 +1,5 @@
-function RouterMonitor() {
-  return <div className="text-gray-200">RouterMonitor content will appear here.</div>;
+function RouterMonitor({ t }) {
+  return <div className="text-gray-200">{t.panels.routerPlaceholder}</div>;
 }
 
 export default RouterMonitor;

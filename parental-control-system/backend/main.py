@@ -1,12 +1,19 @@
+from functools import wraps
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import datetime
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 app = Flask(__name__)
-CORS(app)
+
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "*").split(",")
+    if origin.strip()
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILES = {
@@ -15,6 +22,32 @@ FILES = {
     "locations": os.path.join(BASE_DIR, "vault_locations.json"),
     "notifications": os.path.join(BASE_DIR, "vault_notifications.json"),
 }
+
+API_TOKEN = os.getenv("DASHBOARD_API_TOKEN", "")
+
+
+def require_api_token(handler: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(handler)
+    def wrapper(*args: Any, **kwargs: Any):
+        if not API_TOKEN:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "DASHBOARD_API_TOKEN is not configured.",
+                    }
+                ),
+                503,
+            )
+
+        auth_header = request.headers.get("Authorization", "")
+        token = auth_header.removeprefix("Bearer ").strip()
+        if token != API_TOKEN:
+            return jsonify({"status": "error", "message": "Unauthorized."}), 401
+
+        return handler(*args, **kwargs)
+
+    return wrapper
 
 
 def ensure_storage_files() -> None:
@@ -34,8 +67,10 @@ def read_items(path: str) -> List[Dict[str, Any]]:
 
 
 def write_items(path: str, items: List[Dict[str, Any]]) -> None:
-    with open(path, "w", encoding="utf-8") as file:
+    temp_path = f"{path}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as file:
         json.dump(items, file, indent=2, ensure_ascii=False)
+    os.replace(temp_path, path)
 
 
 def save_data(category: str, payload: Dict[str, Any]) -> None:
@@ -55,6 +90,7 @@ def health_check():
 
 
 @app.route("/api/v1/sync", methods=["POST"])
+@require_api_token
 def sync_data():
     payload = request.get_json(silent=True)
     if not payload:
@@ -69,6 +105,7 @@ def sync_data():
 
 
 @app.route("/api/v1/data/<category>", methods=["GET"])
+@require_api_token
 def get_data(category: str):
     if category not in FILES:
         return jsonify({"status": "error", "message": "Invalid category."}), 400
@@ -76,6 +113,8 @@ def get_data(category: str):
     return jsonify(read_items(FILES[category]))
 
 
+ensure_storage_files()
+
+
 if __name__ == "__main__":
-    ensure_storage_files()
     app.run(host="0.0.0.0", port=5000, debug=True)

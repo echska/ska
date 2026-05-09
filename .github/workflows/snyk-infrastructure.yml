@@ -2,9 +2,9 @@ name: Snyk Infrastructure as Code
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -21,16 +21,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check Snyk token
+        id: snyk_token
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          if [ -n "$SNYK_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SNYK_TOKEN is not configured; skipping Snyk IaC scan."
+          fi
+
       - name: Run Snyk IaC scan and create SARIF
+        if: steps.snyk_token.outputs.available == 'true'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
           snyk auth "$SNYK_TOKEN"
-          snyk iac test --sarif-file-output=snyk.sarif || true
-          ls -la
+          snyk iac test render.yaml --sarif-file-output=snyk.sarif || true
 
       - name: Upload result to GitHub Code Scanning
-        if: always() && hashFiles('snyk.sarif') != ''
+        if: hashFiles('snyk.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: snyk.sarif

@@ -14,6 +14,10 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: DASHBOARD_API_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://parental-control-frontend.onrender.com
 
   - type: web
     name: parental-control-frontend
@@ -22,7 +26,7 @@ services:
     branch: main
     rootDir: parental-control-system/frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: parental-control-system/frontend/build
+    staticPublishPath: ./build
     autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION

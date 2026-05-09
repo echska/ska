@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-function LocationsMap({ locations }) {
+function LocationsMap({ locations, t }) {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
   const layersRef = useRef([]);
@@ -34,15 +34,15 @@ function LocationsMap({ locations }) {
     if (points.length === 0) return;
 
     const polyline = L.polyline(points, { color: "#2563eb" }).addTo(mapRef.current);
-    const marker = L.marker(points[points.length - 1]).addTo(mapRef.current).bindPopup("Latest location");
+    const marker = L.marker(points[points.length - 1]).addTo(mapRef.current).bindPopup(t.panels.latestLocation);
     mapRef.current.fitBounds(polyline.getBounds(), { padding: [20, 20] });
 
     layersRef.current.push(polyline, marker);
-  }, [locations]);
+  }, [locations, t]);
 
   return (
     <div>
-      <h2 className="text-xl mb-2">📍 Device Route Timeline</h2>
+      <h2 className="text-xl mb-2">📍 {t.panels.routeTimeline}</h2>
       <div ref={containerRef} className="h-96 rounded-lg shadow-lg" />
     </div>
   );

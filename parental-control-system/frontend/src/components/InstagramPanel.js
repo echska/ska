@@ -1,5 +1,5 @@
-function InstagramPanel() {
-  return <div className="text-gray-200">InstagramPanel content will appear here.</div>;
+function InstagramPanel({ t }) {
+  return <div className="text-gray-200">{t.panels.instagramPlaceholder}</div>;
 }
 
 export default InstagramPanel;

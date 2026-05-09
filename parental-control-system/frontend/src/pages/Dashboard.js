@@ -7,81 +7,114 @@ import RouterMonitor from "../components/RouterMonitor";
 import AlertsPanel from "../components/AlertsPanel";
 import WhatsAppPanel from "../components/WhatsAppPanel";
 import InstagramPanel from "../components/InstagramPanel";
+import LanguageToggle from "../components/LanguageToggle";
 import { fetchCategory } from "../services/api";
 
 const TABS = ["alerts", "router", "calls", "messages", "locations", "whatsapp", "instagram"];
 
-function Dashboard() {
+function Dashboard({ language, onLanguageChange, token, onLogout, t }) {
   const [activeTab, setActiveTab] = useState("alerts");
   const [calls, setCalls] = useState([]);
   const [messages, setMessages] = useState([]);
   const [locations, setLocations] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [status, setStatus] = useState(t.statuses.loading);
 
   useEffect(() => {
     let intervalId;
+    let isMounted = true;
 
     const loadData = async () => {
       const [c, m, l, n] = await Promise.allSettled([
-        fetchCategory("calls"),
-        fetchCategory("messages"),
-        fetchCategory("locations"),
-        fetchCategory("notifications"),
+        fetchCategory("calls", token),
+        fetchCategory("messages", token),
+        fetchCategory("locations", token),
+        fetchCategory("notifications", token),
       ]);
+
+      if (!isMounted) return;
+
+      const rejected = [c, m, l, n].find((result) => result.status === "rejected");
+      if (rejected?.reason?.status === 401) {
+        onLogout();
+        return;
+      }
 
       setCalls(c.status === "fulfilled" && Array.isArray(c.value) ? c.value : []);
       setMessages(m.status === "fulfilled" && Array.isArray(m.value) ? m.value : []);
       setLocations(l.status === "fulfilled" && Array.isArray(l.value) ? l.value : []);
       setNotifications(n.status === "fulfilled" && Array.isArray(n.value) ? n.value : []);
+      setStatus(
+        rejected?.reason?.status === 503
+          ? t.statuses.missingToken
+          : rejected
+            ? t.statuses.partial
+            : t.statuses.ready
+      );
     };
 
     loadData();
     intervalId = setInterval(loadData, 10000);
 
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [token, onLogout, t]);
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
       case "alerts":
-        return <AlertsPanel notifications={notifications} />;
+        return <AlertsPanel notifications={notifications} t={t} />;
       case "router":
-        return <RouterMonitor />;
+        return <RouterMonitor t={t} />;
       case "calls":
-        return <CallsTable calls={calls} />;
+        return <CallsTable calls={calls} t={t} />;
       case "messages":
-        return <MessagesTable messages={messages} />;
+        return <MessagesTable messages={messages} t={t} />;
       case "locations":
         return (
           <>
-            <LocationsMap locations={locations} />
-            <LocationsTimeline locations={locations} />
+            <LocationsMap locations={locations} t={t} />
+            <LocationsTimeline locations={locations} t={t} />
           </>
         );
       case "whatsapp":
-        return <WhatsAppPanel />;
+        return <WhatsAppPanel t={t} />;
       case "instagram":
-        return <InstagramPanel />;
+        return <InstagramPanel t={t} />;
       default:
-        return <AlertsPanel notifications={notifications} />;
+        return <AlertsPanel notifications={notifications} t={t} />;
     }
-  }, [activeTab, calls, messages, locations, notifications]);
+  }, [activeTab, calls, messages, locations, notifications, t]);
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-6">
-      <h1 className="text-4xl font-bold mb-6 text-center">🔒 Unified Parental Control Dashboard</h1>
-      <div className="flex flex-wrap gap-3 mb-6">
+    <div className="dashboard-shell">
+      <header className="dashboard-header">
+        <div>
+          <p className="eyebrow">{t.dashboardEyebrow}</p>
+          <h1>{t.dashboardTitle}</h1>
+          <p>{status}</p>
+        </div>
+        <div className="header-actions">
+          <LanguageToggle language={language} onLanguageChange={onLanguageChange} t={t} />
+          <button className="secondary-button" type="button" onClick={onLogout}>
+            {t.signOut}
+          </button>
+        </div>
+      </header>
+      <nav className="tab-list" aria-label={t.sectionsLabel}>
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg transition ${activeTab === tab ? "bg-blue-600" : "bg-gray-700"} hover:bg-blue-700`}
+            className={activeTab === tab ? "tab-button active" : "tab-button"}
           >
-            {tab.toUpperCase()}
+            {t.tabs[tab]}
           </button>
         ))}
-      </div>
-      <div className="bg-gray-800 p-4 rounded-lg shadow-lg">{tabContent}</div>
+      </nav>
+      <section className="panel">{tabContent}</section>
     </div>
   );
 }

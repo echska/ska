@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "cd parental-control-system/frontend && npm install && npm run build",
+  "outputDirectory": "parental-control-system/frontend/build",
+  "installCommand": "cd parental-control-system/frontend && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

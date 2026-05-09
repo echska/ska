@@ -9,6 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MAX_ITEMS_PER_CATEGORY = 5000
 FILES = {
     "calls": os.path.join(BASE_DIR, "vault_calls.json"),
     "messages": os.path.join(BASE_DIR, "vault_messages.json"),
@@ -38,7 +39,20 @@ def write_items(path: str, items: List[Dict[str, Any]]) -> None:
         json.dump(items, file, indent=2, ensure_ascii=False)
 
 
-def save_data(category: str, payload: Dict[str, Any]) -> None:
+def validate_payload(category: str, payload: Dict[str, Any]) -> str | None:
+    required = {
+        "calls": ["number"],
+        "messages": ["content"],
+        "locations": ["lat", "lng"],
+        "notifications": ["message"],
+    }
+    missing = [field for field in required[category] if field not in payload]
+    if missing:
+        return f"Missing required fields: {', '.join(missing)}"
+    return None
+
+
+def save_data(category: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     path = FILES[category]
     current = read_items(path)
 
@@ -46,12 +60,19 @@ def save_data(category: str, payload: Dict[str, Any]) -> None:
     record["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     current.append(record)
 
+    if len(current) > MAX_ITEMS_PER_CATEGORY:
+        current = current[-MAX_ITEMS_PER_CATEGORY:]
+
     write_items(path, current)
+    return record
+
+
+ensure_storage_files()
 
 
 @app.route("/health", methods=["GET"])
 def health_check():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "service": "parental-control-backend"})
 
 
 @app.route("/api/v1/sync", methods=["POST"])
@@ -64,8 +85,12 @@ def sync_data():
     if category not in FILES:
         return jsonify({"status": "error", "message": "Invalid data type."}), 400
 
-    save_data(category, payload)
-    return jsonify({"status": "success"}), 201
+    validation_error = validate_payload(category, payload)
+    if validation_error:
+        return jsonify({"status": "error", "message": validation_error}), 400
+
+    record = save_data(category, payload)
+    return jsonify({"status": "success", "record": record}), 201
 
 
 @app.route("/api/v1/data/<category>", methods=["GET"])
@@ -77,5 +102,4 @@ def get_data(category: str):
 
 
 if __name__ == "__main__":
-    ensure_storage_files()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

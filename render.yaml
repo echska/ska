@@ -22,7 +22,7 @@ services:
     branch: main
     rootDir: parental-control-system/frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: build
+    staticPublishPath: parental-control-system/frontend/build
     pullRequestPreviewsEnabled: true
     envVars:
       - key: NODE_VERSION

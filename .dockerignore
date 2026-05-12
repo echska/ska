@@ -1,0 +1,14 @@
+.git
+.github
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/.mypy_cache
+**/.DS_Store
+
+# Frontend and docs are not needed for backend image
+parental-control-system/frontend/node_modules
+parental-control-system/frontend/build
+skills
